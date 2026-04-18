@@ -64,7 +64,7 @@ const generateQuestionAI = async (topic, difficulty, provider = 'gemini') => {
     if (!hasGeminiKey) {
       throw new Error('Gemini API key is not configured. Set GEMINI_API_KEY to use Gemini.');
     }
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     const result = await model.generateContent(prompt);
     const response = await result.response;
     return response.text();
@@ -86,11 +86,7 @@ const generateQuestionAI = async (topic, difficulty, provider = 'gemini') => {
         try {
           resultJsonString = await retryAsync(callGemini);
         } catch (geminiError) {
-          if (!hasOpenAIKey) {
-            throw new Error(`Gemini failed and OpenAI key is not configured. Gemini error: ${geminiError?.message || geminiError}`);
-          }
-          console.warn('Gemini unavailable, falling back to OpenAI:', geminiError?.message || geminiError);
-          resultJsonString = await retryAsync(callOpenAI);
+          throw new Error(`Gemini AI Error: ${geminiError?.message || geminiError}`);
         }
       }
     }
