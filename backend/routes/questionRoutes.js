@@ -22,22 +22,31 @@ router.post('/generate', protect, async (req, res) => {
     // 🔥 New System: AI generates the solution, Judge0 evaluates it for absolute precision
     if (aiData.referenceSolution) {
       const { executeCode } = require('../services/executionService');
+      const executionPromises = [];
       
       if (aiData.examples) {
         for (let ex of aiData.examples) {
-          const result = await executeCode(aiData.referenceSolution, 71, ex.input);
-          if (result.stdout != null) ex.output = result.stdout.trim();
-          else throw new Error('AI Reference Solution failed on an example input. Try generating again.');
+          executionPromises.push(
+            executeCode(aiData.referenceSolution, 71, ex.input).then(result => {
+              if (result.stdout != null) ex.output = result.stdout.trim();
+              else throw new Error('AI Reference Solution failed on an example input. Try generating again.');
+            })
+          );
         }
       }
       
       if (aiData.testCases) {
         for (let tc of aiData.testCases) {
-          const result = await executeCode(aiData.referenceSolution, 71, tc.input);
-          if (result.stdout != null) tc.expectedOutput = result.stdout.trim();
-          else throw new Error('AI Reference Solution failed on a test case input. Try generating again.');
+          executionPromises.push(
+            executeCode(aiData.referenceSolution, 71, tc.input).then(result => {
+              if (result.stdout != null) tc.expectedOutput = result.stdout.trim();
+              else throw new Error('AI Reference Solution failed on a test case input. Try generating again.');
+            })
+          );
         }
       }
+
+      await Promise.all(executionPromises);
     }
 
     const newQuestion = await Question.create({
