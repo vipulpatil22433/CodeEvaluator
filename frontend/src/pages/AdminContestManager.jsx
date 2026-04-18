@@ -21,6 +21,28 @@ export default function AdminContestManager() {
   const [difficultyFilter, setDifficultyFilter] = useState('All');
   const [creating, setCreating] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAIGenerating, setIsAIGenerating] = useState(false);
+
+  const handleAIGenerateFromSearch = async () => {
+    if (!searchQuery) return;
+    setIsAIGenerating(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/questions/generate`,
+        { topic: searchQuery, difficulty: difficultyFilter === 'All' ? 'Medium' : difficultyFilter, provider: 'gemini' },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      const newQuestion = res.data;
+      setQuestions([{ ...newQuestion, title: newQuestion.title, difficulty: newQuestion.difficulty }, ...questions]);
+      setSelectedQuestions([...selectedQuestions, newQuestion._id]);
+      setSearchQuery('');
+    } catch (err) {
+      alert("Failed to generate problem: " + (err.response?.data?.message || err.message));
+    }
+    setIsAIGenerating(false);
+  };
 
   const fetchData = async () => {
     try {
@@ -177,10 +199,23 @@ export default function AdminContestManager() {
                   </div>
                   <div className="bg-dark rounded p-2" style={{ maxHeight: '200px', overflowY: 'auto', minHeight: '60px' }}>
                     {filteredQuestions.length === 0 ? (
-                      <div className="text-center text-secondary small py-3">
-                        {questions.length === 0
-                          ? '📭 No questions yet. Use "Add Question Manually" or generate one from the Dashboard.'
-                          : '🔍 No questions match your filter.'}
+                      <div className="text-center text-secondary small py-3 d-flex flex-column align-items-center">
+                        <div className="mb-2">
+                          {questions.length === 0
+                            ? '📭 No questions yet. Use "Add Question Manually" or Ask AI.'
+                            : '🔍 No questions match your filter.'}
+                        </div>
+                        
+                        {searchQuery && (
+                          <button 
+                            type="button"
+                            onClick={handleAIGenerateFromSearch}
+                            disabled={isAIGenerating}
+                            className="btn btn-sm btn-outline-info rounded-pill px-3 py-1 fw-bold"
+                          >
+                            {isAIGenerating ? 'Generating...' : `✨ Ask AI to create "${searchQuery}"`}
+                          </button>
+                        )}
                       </div>
                     ) : (
                       filteredQuestions.map(q => (
