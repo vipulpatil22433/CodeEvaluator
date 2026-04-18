@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+dist/
+build/
+.cache/
+
+# Environment Variables
+.env
+.env.local
+.env.production
+.env.development
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# IDE Files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Project specific
+backend/node_modules/
+frontend/node_modules/
+frontend/dist/
