@@ -7,7 +7,6 @@ build/
 # Environment Variables
 .env
 .env.local
-.env.production
 .env.development
 
 # OS Files
