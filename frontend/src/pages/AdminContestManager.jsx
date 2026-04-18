@@ -150,26 +150,26 @@ export default function AdminContestManager() {
               <h3 className="h5 fw-bold mb-4">Create New Contest</h3>
               <form onSubmit={handleCreateContest}>
                 <div className="mb-3">
-                  <label className="form-label small fw-bold">Title</label>
+                  <label className="form-label small fw-bold text-white">Title</label>
                   <input type="text" className="form-control bg-dark text-white border-0" required value={title} onChange={e=>setTitle(e.target.value)} placeholder="e.g. Weekly Challenge #1" />
                 </div>
                 <div className="mb-3">
-                  <label className="form-label small fw-bold">Description</label>
+                  <label className="form-label small fw-bold text-white">Description</label>
                   <textarea className="form-control bg-dark text-white border-0" rows="2" required value={description} onChange={e=>setDescription(e.target.value)} placeholder="Brief description of the contest..." />
                 </div>
                 <div className="row g-3 mb-3">
                   <div className="col-6">
-                    <label className="form-label small fw-bold">Start Time</label>
+                    <label className="form-label small fw-bold text-white">Start Time</label>
                     <input type="datetime-local" className="form-control bg-dark text-white border-0" required value={startTime} onChange={e=>setStartTime(e.target.value)} />
                   </div>
                   <div className="col-6">
-                    <label className="form-label small fw-bold">End Time</label>
+                    <label className="form-label small fw-bold text-white">End Time</label>
                     <input type="datetime-local" className="form-control bg-dark text-white border-0" required value={endTime} onChange={e=>setEndTime(e.target.value)} />
                   </div>
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label small fw-bold d-flex justify-content-between align-items-center mb-2">
+                  <label className="form-label small fw-bold text-white d-flex justify-content-between align-items-center mb-2">
                     Select Questions 
                     <button 
                       type="button" 
@@ -226,7 +226,7 @@ export default function AdminContestManager() {
                         >
                           {selectedQuestions.includes(q._id) ? <CheckSquare size={18} className="text-primary me-2" /> : <Square size={18} className="text-secondary me-2" />}
                           <div className="small flex-grow-1">
-                            <div className="fw-bold text-white">{q.title}</div>
+                            <div className="fw-bold">{q.title}</div>
                             <span className={`badge ${
                               q.difficulty === 'Easy' ? 'bg-success' :
                               q.difficulty === 'Hard' ? 'bg-danger' : 'bg-warning text-dark'
