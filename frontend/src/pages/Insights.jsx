@@ -5,6 +5,17 @@ import axios from 'axios';
 import { BarChart3, PieChart as PieChartIcon, TrendingUp, Target } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 
+const CustomXAxisTick = ({ x, y, payload }) => {
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <rect x="-35" y="8" width="70" height="26" fill="#1e1e1e" stroke="#333" strokeWidth="1" rx="6" />
+      <text x="0" y="25" textAnchor="middle" fill="#e2e8f0" fontSize="13" fontWeight="bold">
+        {payload.value}
+      </text>
+    </g>
+  );
+};
+
 export default function Insights() {
   const { user } = useContext(AuthContext);
   const [submissions, setSubmissions] = useState([]);
@@ -96,13 +107,13 @@ export default function Insights() {
                       />
                     </PieChart>
                   </ResponsiveContainer>
-                  <div className="d-flex gap-4 mt-3 small fw-bold">
-                     <span className="text-success d-flex align-items-center">
-                       <span className="d-inline-block rounded-circle bg-success me-2" style={{width:'10px', height:'10px'}}></span>
+                  <div className="d-flex gap-3 mt-3 small fw-bold">
+                     <span className="badge bg-dark border border-success text-success px-3 py-2 d-flex align-items-center" style={{fontSize: '0.9rem'}}>
+                       <span className="d-inline-block rounded-circle bg-success me-2 shadow-sm" style={{width:'10px', height:'10px'}}></span>
                        Accepted
                      </span>
-                     <span className="text-danger d-flex align-items-center">
-                       <span className="d-inline-block rounded-circle bg-danger me-2" style={{width:'10px', height:'10px'}}></span>
+                     <span className="badge bg-dark border border-danger text-danger px-3 py-2 d-flex align-items-center" style={{fontSize: '0.9rem'}}>
+                       <span className="d-inline-block rounded-circle bg-danger me-2 shadow-sm" style={{width:'10px', height:'10px'}}></span>
                        Failed
                      </span>
                   </div>
@@ -121,7 +132,7 @@ export default function Insights() {
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={langData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
-                      <XAxis dataKey="name" stroke="#888" tick={{fill: '#888'}} axisLine={false} tickLine={false} />
+                      <XAxis dataKey="name" stroke="#888" tick={<CustomXAxisTick />} axisLine={false} tickLine={false} height={50} />
                       <YAxis stroke="#888" tick={{fill: '#888'}} axisLine={false} tickLine={false} allowDecimals={false} />
                       <RechartsTooltip 
                         contentStyle={{ backgroundColor: '#1e1e1e', borderColor: '#333', borderRadius: '8px', color: '#fff' }}
