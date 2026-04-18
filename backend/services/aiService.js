@@ -12,6 +12,10 @@ const generateQuestionPrompt = (topic, difficulty) => {
 Avoid common cliches like "Sum of Two Numbers" or "Count Vowels" unless specifically asked.
 Current Context/Seed: ${timestamp}
 
+CRITICAL RULES FOR INPUT FORMATTING:
+1. Always follow standard competitive programming input formats.
+2. If an input represents an array or a list, you MUST format it exactly as a JSON array with square brackets (e.g., "[1, 2, 3]"). Do not use bare space-separated numbers for arrays. Our backend relies on these brackets to parse the array and prepend its length automatically for the user's 'cin >> n' code.
+
 Return the response strictly in the following JSON format:
 {
   "title": "Problem Title",
