@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
 function ContestDetails() {
   const { id } = useParams();
@@ -16,9 +15,8 @@ function ContestDetails() {
     const fetchContest = async () => {
       try {
         const token = localStorage.getItem("token"); // ✅ FIX
-
         const response = await axios.get(
-          `${backendUrl}/api/contests/${id}`,
+          `${import.meta.env.VITE_API_URL}/contests/${id}`,
           {
             headers: {
               Authorization: `Bearer ${token}` // ✅ FIX
