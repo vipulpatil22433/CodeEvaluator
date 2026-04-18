@@ -226,7 +226,7 @@ export default function AdminContestManager() {
                         >
                           {selectedQuestions.includes(q._id) ? <CheckSquare size={18} className="text-primary me-2" /> : <Square size={18} className="text-secondary me-2" />}
                           <div className="small flex-grow-1">
-                            <div className="fw-bold">{q.title}</div>
+                            <div className="fw-bold text-white">{q.title}</div>
                             <span className={`badge ${
                               q.difficulty === 'Easy' ? 'bg-success' :
                               q.difficulty === 'Hard' ? 'bg-danger' : 'bg-warning text-dark'
