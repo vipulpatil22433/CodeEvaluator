@@ -10,7 +10,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [topic, setTopic] = useState('');
-  const [difficulty, setDifficulty] = useState('Medium');
+  const [difficulty, setDifficulty] = useState('Easy');
   const [provider, setProvider] = useState('gemini');
 
   const [alertMessage, setAlertMessage] = useState(null);
