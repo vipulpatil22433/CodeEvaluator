@@ -18,6 +18,7 @@ export default function AdminContestManager() {
   const [endTime, setEndTime] = useState('');
   const [selectedQuestions, setSelectedQuestions] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [difficultyFilter, setDifficultyFilter] = useState('All');
   const [creating, setCreating] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -104,9 +105,11 @@ export default function AdminContestManager() {
     }
   };
 
-  const filteredQuestions = questions.filter(q => 
-    q.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredQuestions = questions.filter(q => {
+    const matchesSearch = q.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesDifficulty = difficultyFilter === 'All' || q.difficulty === difficultyFilter;
+    return matchesSearch && matchesDifficulty;
+  });
 
   if (!user || !user.isAdmin) return <div className="p-5 text-center">Unauthorized. Admins only.</div>;
 
@@ -155,24 +158,48 @@ export default function AdminContestManager() {
                       <Plus size={14} /> Add Question Manually
                     </button>
                   </label>
-                  <div className="input-group mb-2">
-                     <span className="input-group-text bg-dark border-0 text-secondary"><Search size={16} /></span>
-                     <input type="text" className="form-control bg-dark text-white border-0" placeholder="Search questions..." value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} />
+                  <div className="d-flex gap-2 mb-2">
+                    <div className="input-group flex-grow-1">
+                      <span className="input-group-text bg-dark border-0 text-secondary"><Search size={16} /></span>
+                      <input type="text" className="form-control bg-dark text-white border-0" placeholder="Search questions..." value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} />
+                    </div>
+                    <select
+                      className="form-select bg-dark text-white border-0"
+                      style={{ maxWidth: '110px' }}
+                      value={difficultyFilter}
+                      onChange={e => setDifficultyFilter(e.target.value)}
+                    >
+                      <option value="All">All</option>
+                      <option value="Easy">Easy</option>
+                      <option value="Medium">Medium</option>
+                      <option value="Hard">Hard</option>
+                    </select>
                   </div>
-                  <div className="bg-dark rounded p-2" style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                    {filteredQuestions.map(q => (
-                      <div key={q._id} 
-                        className={`d-flex align-items-center p-2 rounded cursor-pointer mb-1 ${selectedQuestions.includes(q._id) ? 'bg-primary bg-opacity-25' : 'hover-bg-secondary'}`}
-                        style={{ cursor: 'pointer' }}
-                        onClick={() => handleToggleQuestion(q._id)}
-                      >
-                        {selectedQuestions.includes(q._id) ? <CheckSquare size={18} className="text-primary me-2" /> : <Square size={18} className="text-secondary me-2" />}
-                        <div className="small flex-grow-1">
-                          <div className="fw-bold">{q.title}</div>
-                          <div className="text-secondary">{q.difficulty}</div>
-                        </div>
+                  <div className="bg-dark rounded p-2" style={{ maxHeight: '200px', overflowY: 'auto', minHeight: '60px' }}>
+                    {filteredQuestions.length === 0 ? (
+                      <div className="text-center text-secondary small py-3">
+                        {questions.length === 0
+                          ? '📭 No questions yet. Use "Add Question Manually" or generate one from the Dashboard.'
+                          : '🔍 No questions match your filter.'}
                       </div>
-                    ))}
+                    ) : (
+                      filteredQuestions.map(q => (
+                        <div key={q._id}
+                          className={`d-flex align-items-center p-2 rounded mb-1 ${selectedQuestions.includes(q._id) ? 'bg-primary bg-opacity-25' : ''}`}
+                          style={{ cursor: 'pointer' }}
+                          onClick={() => handleToggleQuestion(q._id)}
+                        >
+                          {selectedQuestions.includes(q._id) ? <CheckSquare size={18} className="text-primary me-2" /> : <Square size={18} className="text-secondary me-2" />}
+                          <div className="small flex-grow-1">
+                            <div className="fw-bold">{q.title}</div>
+                            <span className={`badge ${
+                              q.difficulty === 'Easy' ? 'bg-success' :
+                              q.difficulty === 'Hard' ? 'bg-danger' : 'bg-warning text-dark'
+                            } small`}>{q.difficulty}</span>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
 
