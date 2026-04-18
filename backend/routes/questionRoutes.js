@@ -19,6 +19,27 @@ router.post('/generate', protect, async (req, res) => {
 
     const aiData = await generateQuestionAI(topic, difficulty, provider || 'gemini');
     
+    // 🔥 New System: AI generates the solution, Judge0 evaluates it for absolute precision
+    if (aiData.referenceSolution) {
+      const { executeCode } = require('../services/executionService');
+      
+      if (aiData.examples) {
+        for (let ex of aiData.examples) {
+          const result = await executeCode(aiData.referenceSolution, 71, ex.input);
+          if (result.stdout != null) ex.output = result.stdout.trim();
+          else throw new Error('AI Reference Solution failed on an example input. Try generating again.');
+        }
+      }
+      
+      if (aiData.testCases) {
+        for (let tc of aiData.testCases) {
+          const result = await executeCode(aiData.referenceSolution, 71, tc.input);
+          if (result.stdout != null) tc.expectedOutput = result.stdout.trim();
+          else throw new Error('AI Reference Solution failed on a test case input. Try generating again.');
+        }
+      }
+    }
+
     const newQuestion = await Question.create({
       title: aiData.title,
       description: aiData.description,
@@ -26,6 +47,7 @@ router.post('/generate', protect, async (req, res) => {
       examples: aiData.examples,
       testCases: aiData.testCases,
       difficulty: difficulty,
+      solution: aiData.referenceSolution || "",
       createdBy: req.user._id
     });
 

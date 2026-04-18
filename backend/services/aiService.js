@@ -17,11 +17,12 @@ Return the response strictly in the following JSON format:
   "title": "Problem Title",
   "description": "Short markdown description",
   "constraints": ["Constraint 1"],
-  "examples": [ { "input": "...", "output": "...", "explanation": "..." } ],
+  "examples": [ { "input": "...", "explanation": "..." } ],
   "testCases": [
-    { "input": "...", "expectedOutput": "...", "isHidden": false },
-    { "input": "...", "expectedOutput": "...", "isHidden": true }
-  ]
+    { "input": "...", "isHidden": false },
+    { "input": "...", "isHidden": true }
+  ],
+  "referenceSolution": "Python 3 code perfectly solving the problem. MUST read raw input dynamically via import sys, sys.stdin.read().strip() and print exclusively the pure correct output to stdout."
 }`;
 };
 
