@@ -15,17 +15,14 @@ Current Context/Seed: ${timestamp}
 Return the response strictly in the following JSON format:
 {
   "title": "Problem Title",
-  "description": "Detailed markdown description of the problem",
-  "constraints": ["Constraint 1", "Constraint 2"],
-  "examples": [
-    { "input": "...", "output": "...", "explanation": "..." }
-  ],
+  "description": "Short markdown description",
+  "constraints": ["Constraint 1"],
+  "examples": [ { "input": "...", "output": "...", "explanation": "..." } ],
   "testCases": [
     { "input": "...", "expectedOutput": "...", "isHidden": false },
     { "input": "...", "expectedOutput": "...", "isHidden": true }
   ]
-}
-Include at least 4 test cases (2 visible, 2 hidden). Ensure the JSON is valid and do not wrap it in markdown code blocks, just raw JSON string.`;
+}`;
 };
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -64,7 +61,10 @@ const generateQuestionAI = async (topic, difficulty, provider = 'gemini') => {
     if (!hasGeminiKey) {
       throw new Error('Gemini API key is not configured. Set GEMINI_API_KEY to use Gemini.');
     }
-    const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-flash-latest',
+      generationConfig: { responseMimeType: 'application/json' }
+    });
     const result = await model.generateContent(prompt);
     const response = await result.response;
     return response.text();
