@@ -26,7 +26,7 @@ Return the response strictly in the following JSON format:
     { "input": "...", "isHidden": false },
     { "input": "...", "isHidden": true }
   ],
-  "referenceSolution": "Python 3 code perfectly solving the problem. MUST read raw input dynamically via import sys, sys.stdin.read().strip() and print exclusively the pure correct output to stdout."
+  "referenceSolution": "Python 3 code perfectly solving the problem. CRITICAL: Our execution engine passes inputs as space-separated values via standard input. You MUST wrap your logic inside this EXACT standard input boilerplate or execution will crash:\\n\\nimport sys\\n\\ndef solve():\\n    data = sys.stdin.read().split()\\n    if not data: return\\n    # data[0] is typically the array length if the input was an array\\n    # Extract elements, run your algorithm, and print to stdout...\\n    # print(answer)\\n\\nif __name__ == '__main__':\\n    solve()"
 }`;
 };
 
