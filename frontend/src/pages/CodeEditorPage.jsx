@@ -6,9 +6,9 @@ import { AuthContext } from '../context/AuthContext';
 import { Play } from 'lucide-react';
 
 const languageOptions = [
-  { value: 'javascript', label: 'JavaScript', id: 63, defaultCode: 'function solve(input) {\n  // Your code here\n  return input;\n}' },
-  { value: 'python', label: 'Python (3.8)', id: 71, defaultCode: 'def solve(input):\n  # Your code here\n  pass' },
-  { value: 'cpp', label: 'C++', id: 54, defaultCode: '#include <iostream>\nusing namespace std;\n\nint main() {\n  // Your code here\n  return 0;\n}' }
+  { value: 'javascript', label: 'JavaScript', id: 63, defaultCode: "const fs = require('fs');\n\nfunction solve() {\n  // 1. Read input from standard input\n  const input = fs.readFileSync(0, 'utf-8').trim();\n  if (!input) return;\n  \n  const data = input.split(/\\s+/);\n  // NOTE: data[0] is the array length, data[1:] are the elements.\n  \n  // 2. Your logic here\n  \n  // 3. Print the final answer\n  // console.log(answer);\n}\n\nsolve();" },
+  { value: 'python', label: 'Python (3.8)', id: 71, defaultCode: "import sys\n\ndef solve():\n  # 1. Read input from standard input\n  data = sys.stdin.read().split()\n  if not data: return\n  \n  # NOTE: data[0] is typically the array length, data[1:] are the elements.\n  \n  # 2. Your logic here\n  \n  # 3. Print the final answer\n  # print(answer)\n\nif __name__ == '__main__':\n  solve()" },
+  { value: 'cpp', label: 'C++', id: 54, defaultCode: "#include <iostream>\n#include <vector>\nusing namespace std;\n\nint main() {\n  // 1. Read arrays using length header\n  int n;\n  if (!(cin >> n)) return 0;\n  \n  vector<int> arr(n);\n  for(int i = 0; i < n; i++) {\n    cin >> arr[i];\n  }\n  \n  // 2. Your logic here\n  \n  // 3. Print final answer\n  // cout << answer << endl;\n  return 0;\n}" }
 ];
 
 export default function CodeEditorPage() {
