@@ -7,24 +7,24 @@ function ContestDetails() {
   const { id } = useParams();
 
   const [contest, setContest] = useState(null);
-  const [solved, setSolved] = useState([]); // ✅ NEW
+  const [solved, setSolved] = useState([]); //  NEW
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchContest = async () => {
       try {
-        const token = localStorage.getItem("token"); // ✅ FIX
+        const token = localStorage.getItem("token"); //  FIX
         const response = await axios.get(
           `${import.meta.env.VITE_API_URL}/contests/${id}`,
           {
             headers: {
-              Authorization: `Bearer ${token}` // ✅ FIX
+              Authorization: `Bearer ${token}` //  FIX
             }
           }
         );
 
-        // ✅ BACKEND RETURNS { contest, solvedProblems }
+        //  BACKEND RETURNS { contest, solvedProblems }
         setContest(response.data.contest);
         setSolved(response.data.solvedProblems || []);
 
@@ -110,7 +110,7 @@ function ContestDetails() {
             {contest.questions?.length > 0 ? (
               <div className="d-flex flex-column gap-3">
                 {contest.questions.map((q, index) => {
-                  // ✅ CHECK IF SOLVED
+                  //  CHECK IF SOLVED
                   const isSolved = solved.some(
                     (id) => id.toString() === q._id.toString()
                   );
@@ -126,7 +126,7 @@ function ContestDetails() {
                       <div>
                         {isSolved ? (
                           <button className="btn btn-success px-4 fw-bold shadow-sm" disabled>
-                            ✔ Solved
+                             Solved
                           </button>
                         ) : (
                           <Link

@@ -205,12 +205,12 @@ export default function Dashboard() {
                   <div className="mb-4">
                     {provider === 'gemini' ? (
                       <>
-                        <span className="badge bg-success px-3 py-2 me-2">✓ Gemini AI</span>
+                        <span className="badge bg-success px-3 py-2 me-2"> Gemini AI</span>
                         <span className="text-secondary small">Free · Powered by Google</span>
                       </>
                     ) : (
                       <>
-                        <span className="badge bg-info px-3 py-2 me-2">✓ OpenAI</span>
+                        <span className="badge bg-info px-3 py-2 me-2"> OpenAI</span>
                         <span className="text-secondary small">Requires OPENAI_API_KEY</span>
                       </>
                     )}

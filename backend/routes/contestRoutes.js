@@ -8,7 +8,7 @@ const { protect } = require('../middleware/authMiddleware');
 const { admin } = require('../middleware/adminMiddleware');
 
 
-// ✅ GET ALL CONTESTS (Upcoming / Running / Past)
+//  GET ALL CONTESTS (Upcoming / Running / Past)
 router.get('/', async (req, res) => {
   try {
     const now = new Date();
@@ -48,7 +48,7 @@ router.get('/', async (req, res) => {
 });
 
 
-// ✅ GET SINGLE CONTEST BY ID + SOLVED STATUS
+//  GET SINGLE CONTEST BY ID + SOLVED STATUS
 router.get('/:id', protect, async (req, res) => {
   try {
     const contest = await Contest.findById(req.params.id)
@@ -78,7 +78,7 @@ router.get('/:id', protect, async (req, res) => {
 });
 
 
-// ✅ CREATE CONTEST
+//  CREATE CONTEST
 router.post('/', protect, admin, async (req, res) => {
   try {
     const { title, description, startTime, endTime, questions } = req.body;
@@ -113,7 +113,7 @@ router.post('/', protect, admin, async (req, res) => {
 });
 
 
-// ✅ DELETE CONTEST
+//  DELETE CONTEST
 router.delete('/:id', protect, admin, async (req, res) => {
   try {
     const contest = await Contest.findById(req.params.id);

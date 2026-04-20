@@ -19,7 +19,7 @@ router.post('/generate', protect, async (req, res) => {
 
     const aiData = await generateQuestionAI(topic, difficulty, provider || 'gemini');
     
-    // 🔥 New System: AI generates the solution, Judge0 evaluates it for absolute precision
+    //  New System: AI generates the solution, Judge0 evaluates it for absolute precision
     if (aiData.referenceSolution) {
       const { executeCode } = require('../services/executionService');
       const executionPromises = [];

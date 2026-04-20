@@ -10,11 +10,11 @@ const userSchema = new mongoose.Schema({
   problemsSolved: { type: Number, default: 0 },
   contestProblemsSolved: { type: Number, default: 0 },
 
-  // ✅ ADD THIS (IMPORTANT)
+  //  ADD THIS (IMPORTANT)
   solvedProblems: {
     type: [mongoose.Schema.Types.ObjectId],
     ref: "Question",
-    default: [] // 🔥 VERY IMPORTANT (prevents crash)
+    default: [] //  VERY IMPORTANT (prevents crash)
   },
   isAdmin: {
     type: Boolean,

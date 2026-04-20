@@ -19,7 +19,7 @@ const protect = async (req, res, next) => {
         return res.status(401).json({ message: 'User not found' });
       }
 
-      return next(); // ✅ important
+      return next(); //  important
     }
 
     return res.status(401).json({ message: 'Not authorized, no token' });
@@ -30,5 +30,5 @@ const protect = async (req, res, next) => {
   }
 };
 
-// ✅ IMPORTANT EXPORT
+//  IMPORTANT EXPORT
 module.exports = { protect };

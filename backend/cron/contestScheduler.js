@@ -26,7 +26,7 @@ const createContestIfMissing = async ({ title, description, startTime, endTime, 
   });
 
   if (existing) {
-    console.log(`⚠️ ${title} already exists for this time window`);
+    console.log(` ${title} already exists for this time window`);
     return false;
   }
 
@@ -38,7 +38,7 @@ const createContestIfMissing = async ({ title, description, startTime, endTime, 
     endTime
   });
 
-  console.log(`✅ ${title} created`);
+  console.log(` ${title} created`);
   return true;
 };
 
@@ -76,7 +76,7 @@ const createContestForWindow = async ({ title, description, startTime, endTime, 
 
   const requiredCount = Object.values(questionCounts).reduce((sum, value) => sum + value, 0);
   if (questions.length < requiredCount) {
-    console.error(`❌ Not enough questions available for ${title}`);
+    console.error(` Not enough questions available for ${title}`);
     return false;
   }
 
@@ -126,7 +126,7 @@ const tryCreateUpcomingContests = async () => {
 };
 
 tryCreateUpcomingContests().catch((err) => {
-  console.error('❌ Error creating contests on startup:', err);
+  console.error(' Error creating contests on startup:', err);
 });
 
 cron.schedule('0 20 * * *', async () => {
@@ -140,7 +140,7 @@ cron.schedule('0 20 * * *', async () => {
     const questions = await sampleQuestions('Easy', 5);
 
     if (questions.length < 5) {
-      console.error('❌ Not enough easy questions available for the Beginners Contest');
+      console.error(' Not enough easy questions available for the Beginners Contest');
       return;
     }
 
@@ -152,7 +152,7 @@ cron.schedule('0 20 * * *', async () => {
       questionIds: questions.map((q) => q._id)
     });
   } catch (err) {
-    console.error('❌ Error creating Beginners Contest:', err);
+    console.error(' Error creating Beginners Contest:', err);
   }
 });
 
@@ -169,7 +169,7 @@ cron.schedule('0 10 * * *', async () => {
     const questions = [...easy, ...medium];
 
     if (questions.length < 5) {
-      console.error('❌ Not enough questions available for the Daily Contest');
+      console.error(' Not enough questions available for the Daily Contest');
       return;
     }
 
@@ -181,7 +181,7 @@ cron.schedule('0 10 * * *', async () => {
       questionIds: questions.map((q) => q._id)
     });
   } catch (err) {
-    console.error('❌ Error creating Daily Contest:', err);
+    console.error(' Error creating Daily Contest:', err);
   }
 });
 
@@ -199,7 +199,7 @@ cron.schedule('15 13 * * 1', async () => {
     const questions = [...easy, ...medium, ...hard];
 
     if (questions.length < 5) {
-      console.error('❌ Not enough questions available for the Weekly Contest');
+      console.error(' Not enough questions available for the Weekly Contest');
       return;
     }
 
@@ -211,7 +211,7 @@ cron.schedule('15 13 * * 1', async () => {
       questionIds: questions.map((q) => q._id)
     });
   } catch (err) {
-    console.error('❌ Error creating Weekly Contest:', err);
+    console.error(' Error creating Weekly Contest:', err);
   }
 });
 

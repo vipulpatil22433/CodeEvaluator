@@ -84,7 +84,7 @@ export default function Contests() {
         </div>
 
         <div className="mb-5">
-          <h2 className="section-title">🔥 Running</h2>
+          <h2 className="section-title"> Running</h2>
           <div className="contest-grid">
             {running.length > 0 ? running.map(c => renderCard(c, 'running')) : <div className="glow-card p-4 text-muted-light">No running contests at the moment. Check back soon!</div>}
           </div>
@@ -102,7 +102,7 @@ export default function Contests() {
         </div>
 
         <div>
-          <h2 className="section-title">📜 Past</h2>
+          <h2 className="section-title"> Past</h2>
           <div className="contest-grid">
             {past.length > 0 ? past.map(c => renderCard(c, 'past')) : <div className="glow-card p-4 text-muted-light">No past contests found. Once you complete an event it will appear here.</div>}
           </div>

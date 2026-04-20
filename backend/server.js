@@ -3,7 +3,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 
-// 🔥 ADD THIS (timezone fix for India)
+//  ADD THIS (timezone fix for India)
 process.env.TZ = "Asia/Kolkata";
 
 // Load env vars
@@ -22,7 +22,7 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// 🔥 ADD THIS LINE (VERY IMPORTANT)
+//  ADD THIS LINE (VERY IMPORTANT)
 require('./cron/contestScheduler');
 
 // Routes
@@ -45,5 +45,5 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(` Server running on port ${PORT}`);
 });

@@ -202,8 +202,8 @@ export default function AdminContestManager() {
                       <div className="text-center text-secondary small py-3 d-flex flex-column align-items-center">
                         <div className="mb-2">
                           {questions.length === 0
-                            ? '📭 No questions yet. Use "Add Question Manually" or Ask AI.'
-                            : '🔍 No questions match your filter.'}
+                            ? ' No questions yet. Use "Add Question Manually" or Ask AI.'
+                            : ' No questions match your filter.'}
                         </div>
                         
                         {searchQuery && (
@@ -213,7 +213,7 @@ export default function AdminContestManager() {
                             disabled={isAIGenerating}
                             className="btn btn-sm btn-outline-info rounded-pill px-3 py-1 fw-bold"
                           >
-                            {isAIGenerating ? 'Generating...' : `✨ Ask AI to create "${searchQuery}"`}
+                            {isAIGenerating ? 'Generating...' : ` Ask AI to create "${searchQuery}"`}
                           </button>
                         )}
                       </div>

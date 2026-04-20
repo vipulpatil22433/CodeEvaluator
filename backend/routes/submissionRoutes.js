@@ -25,7 +25,7 @@ const normalizeOutput = (str) => {
 // @route   POST /api/submissions
 // @desc    Submit code for evaluation
 // @access  Private
-router.post('/', protect, async (req, res, next) => { // ✅ added next
+router.post('/', protect, async (req, res, next) => { //  added next
   try {
     const { questionId, code, language, languageId, contestId } = req.body;
 
@@ -93,11 +93,11 @@ router.post('/', protect, async (req, res, next) => { // ✅ added next
       executionTime: totalTime
     });
 
-    // ✅ SAFE SOLVED PROBLEM LOGIC
+    //  SAFE SOLVED PROBLEM LOGIC
     if (finalStatus === 'Accepted') {
       const user = await User.findById(req.user._id);
 
-      // 🔥 Prevent crash if undefined
+      //  Prevent crash if undefined
       if (!user.solvedProblems) {
         user.solvedProblems = [];
       }
