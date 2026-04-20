@@ -37,11 +37,20 @@ const formatInput = (input) => {
 const executeCode = async (code, language_id, input = "") => {
   try {
     const formattedStdin = formatInput(input);
-    const apiUrl = "https://ce.judge0.com";
+    const isRapidAPI = Boolean(process.env.JUDGE0_API_KEY && process.env.JUDGE0_API_URL);
+    const apiUrl = isRapidAPI ? process.env.JUDGE0_API_URL : "https://ce.judge0.com";
     
     const requestOptions = {
       params: { base64_encoded: true, wait: true }
     };
+
+    if (isRapidAPI) {
+      requestOptions.headers = {
+        "x-rapidapi-key": process.env.JUDGE0_API_KEY,
+        "x-rapidapi-host": process.env.RAPIDAPI_HOST || "judge0-ce.p.rapidapi.com",
+        "Content-Type": "application/json"
+      };
+    }
 
     const response = await axios.post(
       `${apiUrl}/submissions`,
