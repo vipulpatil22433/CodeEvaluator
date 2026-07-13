@@ -1,0 +1,468 @@
+diff --git a/backend/cron/contestScheduler.js b/backend/cron/contestScheduler.js
+index 731e2f9..9ee29ae 100644
+--- a/backend/cron/contestScheduler.js
++++ b/backend/cron/contestScheduler.js
+@@ -26,7 +26,7 @@ const createContestIfMissing = async ({ title, description, startTime, endTime,
+   });
+ 
+   if (existing) {
+-    console.log(` ${title} already exists for this time window`);
++    console.log(`${title} already exists for this time window`);
+     return false;
+   }
+ 
+@@ -38,7 +38,7 @@ const createContestIfMissing = async ({ title, description, startTime, endTime,
+     endTime
+   });
+ 
+-  console.log(` ${title} created`);
++  console.log(`${title} created`);
+   return true;
+ };
+ 
+@@ -76,7 +76,7 @@ const createContestForWindow = async ({ title, description, startTime, endTime,
+ 
+   const requiredCount = Object.values(questionCounts).reduce((sum, value) => sum + value, 0);
+   if (questions.length < requiredCount) {
+-    console.error(` Not enough questions available for ${title}`);
++    console.error(`Not enough questions available for ${title}`);
+     return false;
+   }
+ 
+@@ -89,131 +89,77 @@ const createContestForWindow = async ({ title, description, startTime, endTime,
+   });
+ };
+ 
++// Single source of truth for the three recurring contests. Both the startup
++// catch-up pass and the daily cron jobs below read from this list, instead of
++// each having their own copy of title/description/question counts.
++const CONTEST_DEFINITIONS = [
++  {
++    title: 'Beginners Contest',
++    description: 'Solve 5 easy problems between 8:00 PM and 10:00 PM.',
++    cronExpr: '0 20 * * *',
++    hour: 20,
++    minute: 0,
++    weekday: null,
++    durationMinutes: 120,
++    questionCounts: { Easy: 5 }
++  },
++  {
++    title: 'Daily Contest',
++    description: 'Solve 3 easy and 2 medium problems between 10:00 AM and 12:00 PM.',
++    cronExpr: '0 10 * * *',
++    hour: 10,
++    minute: 0,
++    weekday: null,
++    durationMinutes: 120,
++    questionCounts: { Easy: 3, Medium: 2 }
++  },
++  {
++    title: 'Weekly Contest',
++    description: 'Solve 2 easy, 2 medium, and 1 hard problem on Monday from 1:15 PM to 3:15 PM.',
++    cronExpr: '15 13 * * 1',
++    hour: 13,
++    minute: 15,
++    weekday: 1,
++    durationMinutes: 120,
++    questionCounts: { Easy: 2, Medium: 2, Hard: 1 }
++  }
++];
++
++// On startup, create any of today's/tomorrow's contests that are missing
++// (e.g. after a deploy or restart that caused a scheduled run to be skipped).
+ const tryCreateUpcomingContests = async () => {
+   const now = new Date();
+   const nextDay = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+ 
+-  const schedules = [
+-    {
+-      title: 'Beginners Contest',
+-      description: 'Solve 5 easy problems between 8:00 PM and 10:00 PM.',
+-      startTime: getNextOccurrence(now, 20, 0),
+-      durationMinutes: 120,
+-      questionCounts: { Easy: 5 }
+-    },
+-    {
+-      title: 'Daily Contest',
+-      description: 'Solve 3 easy and 2 medium problems between 10:00 AM and 12:00 PM.',
+-      startTime: getNextOccurrence(now, 10, 0),
+-      durationMinutes: 120,
+-      questionCounts: { Easy: 3, Medium: 2 }
+-    },
+-    {
+-      title: 'Weekly Contest',
+-      description: 'Solve 2 easy, 2 medium, and 1 hard problem on Monday from 1:15 PM to 3:15 PM.',
+-      startTime: getNextOccurrence(now, 13, 15, 1),
+-      durationMinutes: 120,
+-      questionCounts: { Easy: 2, Medium: 2, Hard: 1 }
+-    }
+-  ];
+-
+-  for (const schedule of schedules) {
+-    if (schedule.startTime > now && schedule.startTime <= nextDay) {
+-      schedule.endTime = new Date(schedule.startTime.getTime() + schedule.durationMinutes * 60 * 1000);
+-      await createContestForWindow(schedule);
++  for (const definition of CONTEST_DEFINITIONS) {
++    const startTime = getNextOccurrence(now, definition.hour, definition.minute, definition.weekday);
++    if (startTime > now && startTime <= nextDay) {
++      const endTime = new Date(startTime.getTime() + definition.durationMinutes * 60 * 1000);
++      await createContestForWindow({ ...definition, startTime, endTime });
+     }
+   }
+ };
+ 
+ tryCreateUpcomingContests().catch((err) => {
+-  console.error(' Error creating contests on startup:', err);
++  console.error('Error creating contests on startup:', err);
+ });
+ 
+-cron.schedule('0 20 * * *', async () => {
+-  console.log('⏰ Creating Beginners Contest (8:00 PM - 10:00 PM)...');
+-
+-  try {
+-    const now = new Date();
+-    const startTime = buildDate(now, 20, 0);
+-    const endTime = buildDate(now, 22, 0);
+-
+-    const questions = await sampleQuestions('Easy', 5);
+-
+-    if (questions.length < 5) {
+-      console.error(' Not enough easy questions available for the Beginners Contest');
+-      return;
++// Register the actual recurring job for each contest definition.
++for (const definition of CONTEST_DEFINITIONS) {
++  cron.schedule(definition.cronExpr, async () => {
++    console.log(`⏰ Creating ${definition.title}...`);
++    try {
++      const now = new Date();
++      const startTime = buildDate(now, definition.hour, definition.minute);
++      const endTime = new Date(startTime.getTime() + definition.durationMinutes * 60 * 1000);
++      // createContestForWindow already logs why it returned false (either
++      // not enough questions, or a contest for this window already exists)
++      await createContestForWindow({ ...definition, startTime, endTime });
++    } catch (err) {
++      console.error(`Error creating ${definition.title}:`, err);
+     }
+-
+-    await createContestIfMissing({
+-      title: 'Beginners Contest',
+-      description: 'Solve 5 easy problems between 8:00 PM and 10:00 PM.',
+-      startTime,
+-      endTime,
+-      questionIds: questions.map((q) => q._id)
+-    });
+-  } catch (err) {
+-    console.error(' Error creating Beginners Contest:', err);
+-  }
+-});
+-
+-cron.schedule('0 10 * * *', async () => {
+-  console.log('⏰ Creating Daily Contest (10:00 AM - 12:00 PM)...');
+-
+-  try {
+-    const now = new Date();
+-    const startTime = buildDate(now, 10, 0);
+-    const endTime = buildDate(now, 12, 0);
+-
+-    const easy = await sampleQuestions('Easy', 3);
+-    const medium = await sampleQuestions('Medium', 2);
+-    const questions = [...easy, ...medium];
+-
+-    if (questions.length < 5) {
+-      console.error(' Not enough questions available for the Daily Contest');
+-      return;
+-    }
+-
+-    await createContestIfMissing({
+-      title: 'Daily Contest',
+-      description: 'Solve 3 easy and 2 medium problems between 10:00 AM and 12:00 PM.',
+-      startTime,
+-      endTime,
+-      questionIds: questions.map((q) => q._id)
+-    });
+-  } catch (err) {
+-    console.error(' Error creating Daily Contest:', err);
+-  }
+-});
+-
+-cron.schedule('15 13 * * 1', async () => {
+-  console.log('⏰ Creating Weekly Contest (Monday 1:15 PM - 3:15 PM)...');
+-
+-  try {
+-    const now = new Date();
+-    const startTime = buildDate(now, 13, 15);
+-    const endTime = buildDate(now, 15, 15);
+-
+-    const easy = await sampleQuestions('Easy', 2);
+-    const medium = await sampleQuestions('Medium', 2);
+-    const hard = await sampleQuestions('Hard', 1);
+-    const questions = [...easy, ...medium, ...hard];
+-
+-    if (questions.length < 5) {
+-      console.error(' Not enough questions available for the Weekly Contest');
+-      return;
+-    }
+-
+-    await createContestIfMissing({
+-      title: 'Weekly Contest',
+-      description: 'Solve 2 easy, 2 medium, and 1 hard problem on Monday from 1:15 PM to 3:15 PM.',
+-      startTime,
+-      endTime,
+-      questionIds: questions.map((q) => q._id)
+-    });
+-  } catch (err) {
+-    console.error(' Error creating Weekly Contest:', err);
+-  }
+-});
++  });
++}
+ 
+ cron.schedule('* * * * *', async () => {
+   const now = new Date();
+diff --git a/backend/routes/questionRoutes.js b/backend/routes/questionRoutes.js
+index dc4b561..2385f38 100644
+--- a/backend/routes/questionRoutes.js
++++ b/backend/routes/questionRoutes.js
+@@ -3,6 +3,7 @@ const Question = require('../models/Question');
+ const { protect } = require('../middleware/authMiddleware');
+ const { admin } = require('../middleware/adminMiddleware');
+ const { generateQuestionAI } = require('../services/aiService');
++const { executeCode } = require('../services/executionService');
+ 
+ const router = express.Router();
+ 
+@@ -19,9 +20,10 @@ router.post('/generate', protect, async (req, res) => {
+ 
+     const aiData = await generateQuestionAI(topic, difficulty, provider || 'gemini');
+     
+-    //  New System: AI generates the solution, Judge0 evaluates it for absolute precision
++    // AI generates the solution; Judge0 executes it against each example/test case
++    // input so we can derive the expected output with real execution instead of
++    // trusting the model's own claim of correctness.
+     if (aiData.referenceSolution) {
+-      const { executeCode } = require('../services/executionService');
+       const executionPromises = [];
+       
+       if (aiData.examples) {
+diff --git a/backend/server.js b/backend/server.js
+index 75f6715..73df812 100644
+--- a/backend/server.js
++++ b/backend/server.js
+@@ -3,13 +3,10 @@ const cors = require('cors');
+ const dotenv = require('dotenv');
+ const connectDB = require('./config/db');
+ 
+-//  ADD THIS (timezone fix for India)
++// Ensure cron schedules run against IST regardless of host timezone
+ process.env.TZ = "Asia/Kolkata";
+ 
+-// Load env vars
+ dotenv.config();
+-
+-// Connect to database
+ connectDB();
+ 
+ const app = express();
+@@ -22,7 +19,7 @@ app.use(cors({
+ }));
+ app.use(express.json());
+ 
+-//  ADD THIS LINE (VERY IMPORTANT)
++// Starts scheduled contest-creation jobs (see cron/contestScheduler.js)
+ require('./cron/contestScheduler');
+ 
+ // Routes
+@@ -45,5 +42,5 @@ app.use((err, req, res, next) => {
+ const PORT = process.env.PORT || 5000;
+ 
+ app.listen(PORT, () => {
+-  console.log(` Server running on port ${PORT}`);
++  console.log(`Server running on port ${PORT}`);
+ });
+\ No newline at end of file
+diff --git a/backend/testGemini.js b/backend/testGemini.js
+deleted file mode 100644
+index 89612c7..0000000
+--- a/backend/testGemini.js
++++ /dev/null
+@@ -1,16 +0,0 @@
+-require('dotenv').config();
+-const axios = require('axios');
+-
+-(async () => {
+-  try {
+-    const res = await axios.get(`https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`);
+-    console.log("AVAILABLE MODELS:");
+-    console.log(res.data.models.map(m => m.name).join(', '));
+-  } catch(e) {
+-    if (e.response) {
+-      console.error("Fetch Error:", JSON.stringify(e.response.data, null, 2));
+-    } else {
+-      console.error(e.message);
+-    }
+-  }
+-})();
+diff --git a/backend/testJudge0.js b/backend/testJudge0.js
+deleted file mode 100644
+index 1e46c8d..0000000
+--- a/backend/testJudge0.js
++++ /dev/null
+@@ -1,33 +0,0 @@
+-const axios = require('axios');
+-require('dotenv').config();
+-
+-const test = async () => {
+-    console.log("URL:", process.env.JUDGE0_API_URL);
+-    console.log("Key:", process.env.JUDGE0_API_KEY ? "EXISTS" : "MISSING");
+-    
+-    try {
+-        const response = await axios.post(
+-            `${process.env.JUDGE0_API_URL}/submissions?base64_encoded=true&wait=true`,
+-            {
+-                source_code: Buffer.from('print("hello")').toString('base64'),
+-                language_id: 71, // Python
+-                stdin: ""
+-            },
+-            {
+-                headers: {
+-                    "x-rapidapi-key": process.env.JUDGE0_API_KEY,
+-                    "x-rapidapi-host": process.env.RAPIDAPI_HOST,
+-                    "Content-Type": "application/json"
+-                }
+-            }
+-        );
+-        console.log("Success! Output:", Buffer.from(response.data.stdout || "", 'base64').toString());
+-    } catch (e) {
+-        console.log("FAILED!");
+-        console.log("Status:", e.response?.status);
+-        console.log("Data:", e.response?.data);
+-        console.log("Msg:", e.message);
+-    }
+-};
+-
+-test();
+diff --git a/backend/testjs.js b/backend/testjs.js
+deleted file mode 100644
+index 21973d9..0000000
+--- a/backend/testjs.js
++++ /dev/null
+@@ -1,27 +0,0 @@
+-const { executeCode } = require('./services/executionService');
+-async function test() {
+-  const code = `
+-const fs = require('fs');
+-
+-function solve() {
+-    let inputStr;
+-    try {
+-        inputStr = fs.readFileSync(0, 'utf-8');
+-    } catch(e) {
+-        inputStr = fs.readFileSync('/dev/stdin', 'utf-8');
+-    }
+-    inputStr = inputStr.trim();
+-    if (!inputStr) {
+-        console.log("no input");
+-        return;
+-    }
+-    
+-    const data = inputStr.split(/\\s+/);
+-    console.log("length of data: " + data.length);
+-    console.log(data);
+-}
+-solve();
+-`;
+-  console.log(await executeCode(code, 63, "[8, 3, 6, 3, 1]"));
+-}
+-test();
+diff --git a/backend/testjs2.js b/backend/testjs2.js
+deleted file mode 100644
+index 95d591e..0000000
+--- a/backend/testjs2.js
++++ /dev/null
+@@ -1,31 +0,0 @@
+-const { executeCode } = require('./services/executionService');
+-async function test() {
+-  const code = `
+-const fs = require('fs');
+-
+-function solve() {
+-    const inputStr = fs.readFileSync(0, 'utf-8').trim();
+-    if (!inputStr) return;
+-    
+-    const data = inputStr.split(/\\s+/);
+-    const n = parseInt(data[0], 10); 
+-    
+-    const pulses = [];
+-    for (let i = 1; i <= n; i++) {
+-        pulses.push(parseInt(data[i], 10));
+-    }
+-    
+-    for (let i = 1; i < n; i++) {
+-        if (pulses[i - 1] === 2 * pulses[i]) {
+-            console.log(i);
+-            return;
+-        }
+-    }
+-    console.log(-1);
+-}
+-
+-solve();
+-`;
+-  console.log(await executeCode(code, 63, "[8, 3, 6, 3, 1]"));
+-}
+-test();
+diff --git a/backend/testpy.js b/backend/testpy.js
+deleted file mode 100644
+index 3abe59a..0000000
+--- a/backend/testpy.js
++++ /dev/null
+@@ -1,33 +0,0 @@
+-const { executeCode } = require('./services/executionService');
+-async function test() {
+-  const code = `import sys
+-
+-def solve():
+-    data = sys.stdin.read().split()
+-    if not data:
+-        return
+-        
+-    n = int(data[0])
+-    if n == 0:
+-        print(0)
+-        return
+-        
+-    leaves = [int(x) for x in data[1:n+1]]
+-    
+-    count = 1
+-    last_eaten = leaves[0]
+-    
+-    for i in range(1, n):
+-        if leaves[i] > last_eaten:
+-            last_eaten = leaves[i]
+-            count += 1
+-            
+-    print(count)
+-
+-if __name__ == '__main__':
+-    solve()
+-`;
+-  // test it with [3, 1, 4, 3, 6, 8, 7]
+-  console.log(await executeCode(code, 71, "[3, 1, 4, 3, 6, 8, 7]"));
+-}
+-test();
+diff --git a/frontend/src/main.jsx b/frontend/src/main.jsx
+index 99dd544..4d0828f 100644
+--- a/frontend/src/main.jsx
++++ b/frontend/src/main.jsx
+@@ -3,9 +3,8 @@ import ReactDOM from 'react-dom/client';
+ import { BrowserRouter } from 'react-router-dom';
+ import App from './App';
+ 
+-//  ADD THESE LINES
+ import 'bootstrap/dist/css/bootstrap.min.css';
+-import './index.css'; // (if you have custom styles)
++import './index.css';
+ 
+ ReactDOM.createRoot(document.getElementById('root')).render(
+   <BrowserRouter>

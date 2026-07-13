@@ -3,6 +3,7 @@ const Question = require('../models/Question');
 const { protect } = require('../middleware/authMiddleware');
 const { admin } = require('../middleware/adminMiddleware');
 const { generateQuestionAI } = require('../services/aiService');
+const { executeCode } = require('../services/executionService');
 
 const router = express.Router();
 
@@ -19,9 +20,10 @@ router.post('/generate', protect, async (req, res) => {
 
     const aiData = await generateQuestionAI(topic, difficulty, provider || 'gemini');
     
-    //  New System: AI generates the solution, Judge0 evaluates it for absolute precision
+    // AI generates the solution; Judge0 executes it against each example/test case
+    // input so we can derive the expected output with real execution instead of
+    // trusting the model's own claim of correctness.
     if (aiData.referenceSolution) {
-      const { executeCode } = require('../services/executionService');
       const executionPromises = [];
       
       if (aiData.examples) {

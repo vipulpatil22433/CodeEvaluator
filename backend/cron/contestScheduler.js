@@ -26,7 +26,7 @@ const createContestIfMissing = async ({ title, description, startTime, endTime, 
   });
 
   if (existing) {
-    console.log(` ${title} already exists for this time window`);
+    console.log(`${title} already exists for this time window`);
     return false;
   }
 
@@ -38,7 +38,7 @@ const createContestIfMissing = async ({ title, description, startTime, endTime, 
     endTime
   });
 
-  console.log(` ${title} created`);
+  console.log(`${title} created`);
   return true;
 };
 
@@ -76,7 +76,7 @@ const createContestForWindow = async ({ title, description, startTime, endTime, 
 
   const requiredCount = Object.values(questionCounts).reduce((sum, value) => sum + value, 0);
   if (questions.length < requiredCount) {
-    console.error(` Not enough questions available for ${title}`);
+    console.error(`Not enough questions available for ${title}`);
     return false;
   }
 
@@ -89,131 +89,77 @@ const createContestForWindow = async ({ title, description, startTime, endTime, 
   });
 };
 
+// Single source of truth for the three recurring contests. Both the startup
+// catch-up pass and the daily cron jobs below read from this list, instead of
+// each having their own copy of title/description/question counts.
+const CONTEST_DEFINITIONS = [
+  {
+    title: 'Beginners Contest',
+    description: 'Solve 5 easy problems between 8:00 PM and 10:00 PM.',
+    cronExpr: '0 20 * * *',
+    hour: 20,
+    minute: 0,
+    weekday: null,
+    durationMinutes: 120,
+    questionCounts: { Easy: 5 }
+  },
+  {
+    title: 'Daily Contest',
+    description: 'Solve 3 easy and 2 medium problems between 10:00 AM and 12:00 PM.',
+    cronExpr: '0 10 * * *',
+    hour: 10,
+    minute: 0,
+    weekday: null,
+    durationMinutes: 120,
+    questionCounts: { Easy: 3, Medium: 2 }
+  },
+  {
+    title: 'Weekly Contest',
+    description: 'Solve 2 easy, 2 medium, and 1 hard problem on Monday from 1:15 PM to 3:15 PM.',
+    cronExpr: '15 13 * * 1',
+    hour: 13,
+    minute: 15,
+    weekday: 1,
+    durationMinutes: 120,
+    questionCounts: { Easy: 2, Medium: 2, Hard: 1 }
+  }
+];
+
+// On startup, create any of today's/tomorrow's contests that are missing
+// (e.g. after a deploy or restart that caused a scheduled run to be skipped).
 const tryCreateUpcomingContests = async () => {
   const now = new Date();
   const nextDay = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
-  const schedules = [
-    {
-      title: 'Beginners Contest',
-      description: 'Solve 5 easy problems between 8:00 PM and 10:00 PM.',
-      startTime: getNextOccurrence(now, 20, 0),
-      durationMinutes: 120,
-      questionCounts: { Easy: 5 }
-    },
-    {
-      title: 'Daily Contest',
-      description: 'Solve 3 easy and 2 medium problems between 10:00 AM and 12:00 PM.',
-      startTime: getNextOccurrence(now, 10, 0),
-      durationMinutes: 120,
-      questionCounts: { Easy: 3, Medium: 2 }
-    },
-    {
-      title: 'Weekly Contest',
-      description: 'Solve 2 easy, 2 medium, and 1 hard problem on Monday from 1:15 PM to 3:15 PM.',
-      startTime: getNextOccurrence(now, 13, 15, 1),
-      durationMinutes: 120,
-      questionCounts: { Easy: 2, Medium: 2, Hard: 1 }
-    }
-  ];
-
-  for (const schedule of schedules) {
-    if (schedule.startTime > now && schedule.startTime <= nextDay) {
-      schedule.endTime = new Date(schedule.startTime.getTime() + schedule.durationMinutes * 60 * 1000);
-      await createContestForWindow(schedule);
+  for (const definition of CONTEST_DEFINITIONS) {
+    const startTime = getNextOccurrence(now, definition.hour, definition.minute, definition.weekday);
+    if (startTime > now && startTime <= nextDay) {
+      const endTime = new Date(startTime.getTime() + definition.durationMinutes * 60 * 1000);
+      await createContestForWindow({ ...definition, startTime, endTime });
     }
   }
 };
 
 tryCreateUpcomingContests().catch((err) => {
-  console.error(' Error creating contests on startup:', err);
+  console.error('Error creating contests on startup:', err);
 });
 
-cron.schedule('0 20 * * *', async () => {
-  console.log('⏰ Creating Beginners Contest (8:00 PM - 10:00 PM)...');
-
-  try {
-    const now = new Date();
-    const startTime = buildDate(now, 20, 0);
-    const endTime = buildDate(now, 22, 0);
-
-    const questions = await sampleQuestions('Easy', 5);
-
-    if (questions.length < 5) {
-      console.error(' Not enough easy questions available for the Beginners Contest');
-      return;
+// Register the actual recurring job for each contest definition.
+for (const definition of CONTEST_DEFINITIONS) {
+  cron.schedule(definition.cronExpr, async () => {
+    console.log(`⏰ Creating ${definition.title}...`);
+    try {
+      const now = new Date();
+      const startTime = buildDate(now, definition.hour, definition.minute);
+      const endTime = new Date(startTime.getTime() + definition.durationMinutes * 60 * 1000);
+      // createContestForWindow already logs why it returned false (either
+      // not enough questions, or a contest for this window already exists)
+      await createContestForWindow({ ...definition, startTime, endTime });
+    } catch (err) {
+      console.error(`Error creating ${definition.title}:`, err);
     }
-
-    await createContestIfMissing({
-      title: 'Beginners Contest',
-      description: 'Solve 5 easy problems between 8:00 PM and 10:00 PM.',
-      startTime,
-      endTime,
-      questionIds: questions.map((q) => q._id)
-    });
-  } catch (err) {
-    console.error(' Error creating Beginners Contest:', err);
-  }
-});
-
-cron.schedule('0 10 * * *', async () => {
-  console.log('⏰ Creating Daily Contest (10:00 AM - 12:00 PM)...');
-
-  try {
-    const now = new Date();
-    const startTime = buildDate(now, 10, 0);
-    const endTime = buildDate(now, 12, 0);
-
-    const easy = await sampleQuestions('Easy', 3);
-    const medium = await sampleQuestions('Medium', 2);
-    const questions = [...easy, ...medium];
-
-    if (questions.length < 5) {
-      console.error(' Not enough questions available for the Daily Contest');
-      return;
-    }
-
-    await createContestIfMissing({
-      title: 'Daily Contest',
-      description: 'Solve 3 easy and 2 medium problems between 10:00 AM and 12:00 PM.',
-      startTime,
-      endTime,
-      questionIds: questions.map((q) => q._id)
-    });
-  } catch (err) {
-    console.error(' Error creating Daily Contest:', err);
-  }
-});
-
-cron.schedule('15 13 * * 1', async () => {
-  console.log('⏰ Creating Weekly Contest (Monday 1:15 PM - 3:15 PM)...');
-
-  try {
-    const now = new Date();
-    const startTime = buildDate(now, 13, 15);
-    const endTime = buildDate(now, 15, 15);
-
-    const easy = await sampleQuestions('Easy', 2);
-    const medium = await sampleQuestions('Medium', 2);
-    const hard = await sampleQuestions('Hard', 1);
-    const questions = [...easy, ...medium, ...hard];
-
-    if (questions.length < 5) {
-      console.error(' Not enough questions available for the Weekly Contest');
-      return;
-    }
-
-    await createContestIfMissing({
-      title: 'Weekly Contest',
-      description: 'Solve 2 easy, 2 medium, and 1 hard problem on Monday from 1:15 PM to 3:15 PM.',
-      startTime,
-      endTime,
-      questionIds: questions.map((q) => q._id)
-    });
-  } catch (err) {
-    console.error(' Error creating Weekly Contest:', err);
-  }
-});
+  });
+}
 
 cron.schedule('* * * * *', async () => {
   const now = new Date();
